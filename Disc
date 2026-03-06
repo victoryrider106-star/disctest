@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Personal Profile System Response Page</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; background: #f7f7f7; color: #222; }
+    .container { max-width: 1200px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 4px 18px rgba(0,0,0,0.08); }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    .meta { display: grid; grid-template-columns: 1fr 220px 220px; gap: 16px; margin-bottom: 20px; }
+    label { font-weight: 600; display: block; margin-bottom: 6px; }
+    input[type="text"], input[type="date"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
+    .intro { margin: 12px 0 20px; font-size: 15px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 14px; background: #fafafa; }
+    .card h3 { margin: 0 0 10px; font-size: 18px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 8px 6px; border-bottom: 1px solid #e6e6e6; text-align: left; font-size: 14px; }
+    th { font-size: 13px; color: #555; }
+    .footer { margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap; }
+    button { padding: 12px 18px; border: 0; border-radius: 8px; cursor: pointer; font-size: 14px; }
+    .primary { background: #111827; color: white; }
+    .secondary { background: #e5e7eb; color: #111827; }
+    .note { margin-top: 14px; color: #555; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Personal Profile System Response Page</h1>
+    <p class="intro">Choose one <strong>MOST</strong> and one <strong>LEAST</strong> in each of the 28 groups of words.</p>
+
+    <div class="meta">
+      <div>
+        <label for="name">Name</label>
+        <input id="name" type="text" name="name" />
+      </div>
+      <div>
+        <label for="date">Date</label>
+        <input id="date" type="date" name="date" />
+      </div>
+      <div>
+        <label for="focus">Focus</label>
+        <input id="focus" type="text" name="focus" />
+      </div>
+    </div>
+
+    <form id="discForm">
+      <div class="grid" id="questionGrid"></div>
+      <div class="footer">
+        <button type="button" class="primary" onclick="downloadJSON()">Download Responses</button>
+        <button type="reset" class="secondary">Clear Form</button>
+      </div>
+      <p class="note">This is a digital version based on the uploaded response page. It does not automatically score the assessment.</p>
+    </form>
+  </div>
+
+  <script>
+    const groups = [
+      ["enthusiastic","daring","diplomatic","satisfied"],
+      ["cautious","determined","convincing","good-natured"],
+      ["friendly","accurate","outspoken","calm"],
+      ["talkative","controlled","conventional","decisive"],
+      ["adventurous","insightful","out-going","moderate"],
+      ["gentle","persuasive","humble","original"],
+      ["expressive","conscientious","dominant","responsive"],
+      ["poised","observant","modest","impatient"],
+      ["tactful","agreeable","magnetic","insistent"],
+      ["brave","inspiring","submissive","timid"],
+      ["reserved","obliging","strong-willed","cheerful"],
+      ["stimulating","kind","perceptive","independent"],
+      ["competitive","considerate","joyful","private"],
+      ["fussy","obedient","firm","playful"],
+      ["attractive","introspective","stubborn","predictable"],
+      ["logical","bold","loyal","charming"],
+      ["sociable","patient","self-reliant","soft-spoken"],
+      ["willing","eager","thorough","high-spirited"],
+      ["aggressive","extroverted","amiable","fearful"],
+      ["confident","sympathetic","impartial","assertive"],
+      ["well-disciplined","generous","animated","persistent"],
+      ["impulsive","introverted","forceful","easy-going"],
+      ["good-mixer","refined","vigorous","lenient"],
+      ["captivating","contented","demanding","compliant"],
+      ["argumentative","systematic","cooperative","light-hearted"],
+      ["jovial","precise","direct","even-tempered"],
+      ["restless","neighborly","appealing","careful"],
+      ["respectful","pioneering","optimistic","helpful"]
+    ];
+
+    const grid = document.getElementById('questionGrid');
+    groups.forEach((words, index) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <h3>Group ${index + 1}</h3>
+        <table>
+          <thead>
+            <tr><th>Word</th><th>Most</th><th>Least</th></tr>
+          </thead>
+          <tbody>
+            ${words.map((word, i) => `
+              <tr>
+                <td>${word}</td>
+                <td><input type="radio" name="group_${index + 1}_most" value="${word}"></td>
+                <td><input type="radio" name="group_${index + 1}_least" value="${word}"></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      grid.appendChild(card);
+    });
+
+    function downloadJSON() {
+      const result = {
+        name: document.getElementById('name').value,
+        date: document.getElementById('date').value,
+        focus: document.getElementById('focus').value,
+        responses: []
+      };
+
+      groups.forEach((words, index) => {
+        const most = document.querySelector(`input[name="group_${index + 1}_most"]:checked`);
+        const least = document.querySelector(`input[name="group_${index + 1}_least"]:checked`);
+        result.responses.push({
+          group: index + 1,
+          most: most ? most.value : null,
+          least: least ? least.value : null
+        });
+      });
+
+      const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'disc_responses.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
